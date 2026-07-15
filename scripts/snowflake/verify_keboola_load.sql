@@ -1,0 +1,32 @@
+-- verify_keboola_load.sql
+
+USE DATABASE CLOUDMETRICS;
+USE SCHEMA RAW;
+
+-- Row counts (expected: HubSpot 50, Intercom 30)
+SELECT 'HUBSPOT_CONTACTS' AS table_name, COUNT(*) AS row_count FROM HUBSPOT_CONTACTS
+UNION ALL
+SELECT 'INTERCOM_CONVERSATIONS', COUNT(*) FROM INTERCOM_CONVERSATIONS;
+
+-- HubSpot sample
+SELECT contact_id, email, plan, company_size, updated_at
+FROM HUBSPOT_CONTACTS
+ORDER BY contact_id
+LIMIT 5;
+
+-- Intercom sample (NULL resolved_at is valid)
+SELECT conversation_id, contact_id, opened_at, resolved_at, status
+FROM INTERCOM_CONVERSATIONS
+ORDER BY conversation_id
+LIMIT 5;
+
+-- Referential sanity: intercom contact_id should exist in hubspot
+SELECT i.contact_id, COUNT(*) AS conversations
+FROM INTERCOM_CONVERSATIONS i
+LEFT JOIN HUBSPOT_CONTACTS h ON i.contact_id = h.contact_id
+WHERE h.contact_id IS NULL
+GROUP BY i.contact_id;
+-- Expected: 0 rows (all contacts linked)
+
+-- Plan distribution for dbt sanity
+SELECT plan, COUNT(*) FROM HUBSPOT_CONTACTS GROUP BY plan ORDER BY COUNT(*) DESC;

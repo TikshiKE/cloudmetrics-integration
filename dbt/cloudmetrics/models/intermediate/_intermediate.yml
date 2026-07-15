@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: int_user_activity_7d
+    description: Rolling 7-day product usage metrics per user
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: actor_runs_7d
+        description: Actor Run Completed events in last 7 days

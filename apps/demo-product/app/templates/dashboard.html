@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}CloudMetrics — Dashboard{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Product Dashboard</h1>
+  <p class="subtitle">Simulate user actions → server-side Segment <code>track()</code> → Snowflake pipeline</p>
+</section>
+
+<section class="card session-card">
+  <h2>Current session</h2>
+  <dl class="session-dl">
+    <dt>User ID</dt>
+    <dd><code>{{ user_id or "— (sign up first)" }}</code></dd>
+    <dt>Anonymous ID</dt>
+    <dd><code>{{ anonymous_id }}</code></dd>
+    <dt>Plan</dt>
+    <dd><span class="badge">{{ plan }}</span></dd>
+    <dt>Status</dt>
+    <dd>{% if signed_up %}<span class="badge badge-green">Signed up</span>{% else %}<span class="badge badge-gray">Anonymous</span>{% endif %}</dd>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>User actions</h2>
+  <p class="muted">Each click sends a Segment event from the Python backend.</p>
+  <div class="actions">
+    <button class="btn btn-primary"
+            hx-post="/actions/sign-up"
+            hx-target="#recent-actions"
+            hx-swap="innerHTML">
+      Sign Up
+    </button>
+    <button class="btn"
+            hx-post="/actions/run-actor"
+            hx-target="#recent-actions"
+            hx-swap="innerHTML">
+      Run Actor
+    </button>
+    <button class="btn"
+            hx-post="/actions/view-dashboard"
+            hx-target="#recent-actions"
+            hx-swap="innerHTML">
+      View Dashboard
+    </button>
+    <button class="btn btn-accent"
+            hx-post="/actions/upgrade"
+            hx-target="#recent-actions"
+            hx-swap="innerHTML">
+      Click Upgrade
+    </button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Recent actions (local log)</h2>
+  <div id="recent-actions" class="log-panel">
+    <p class="muted">No actions yet. Click a button above.</p>
+  </div>
+</section>
+
+<section class="card hint-card">
+  <h3>Demo flow</h3>
+  <ol>
+    <li>Sign Up → verify in <a href="https://app.segment.com" target="_blank">Segment Debugger</a></li>
+    <li>Run Actor several times → product usage signals in the warehouse</li>
+    <li>Upgrade → funnel event for analytics</li>
+    <li><a href="/admin">Admin</a> → pipeline monitor and reverse ETL log</li>
+  </ol>
+</section>
+{% endblock %}

@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_segment__events
+    description: Unified Segment track events from per-event Snowflake tables
+    columns:
+      - name: event_id
+        description: Segment message id
+        tests: [unique, not_null]
+      - name: event_name
+        description: Tracking plan event name
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Signed Up', 'Actor Run Completed', 'Dashboard Viewed', 'Upgrade Clicked']
+      - name: user_id
+        description: Known user id (or anonymous fallback)
+        tests: [not_null]
+      - name: event_timestamp
+        tests: [not_null]
+
+  - name: stg_hubspot__contacts
+    description: Cleaned HubSpot contacts from RAW
+    columns:
+      - name: contact_id
+        tests: [unique, not_null]
+      - name: email
+        tests: [not_null]
+      - name: plan
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['free', 'starter', 'pro', 'enterprise']
+
+  - name: stg_intercom__conversations
+    description: Cleaned Intercom conversations from RAW
+    columns:
+      - name: conversation_id
+        tests: [unique, not_null]
+      - name: user_id
+        tests: [not_null]

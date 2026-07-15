@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: dim_users
+    description: One row per user — HubSpot + Segment + Intercom attributes
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: plan
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['free', 'starter', 'pro', 'enterprise']
+
+  - name: fct_product_events
+    description: Product behavioral events fact table
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: user_id
+        tests: [not_null]
+
+  - name: mart_pqa_scores
+    description: Product Qualified Account scores for reverse ETL and BI
+    columns:
+      - name: user_id
+        tests: [unique, not_null]
+      - name: pqa_score
+        description: Score 0-100 (enforced in model logic)
+        tests: [not_null]
+      - name: pqa_tier
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['hot', 'warm', 'cold']

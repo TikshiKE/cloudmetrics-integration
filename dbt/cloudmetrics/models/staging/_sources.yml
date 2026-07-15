@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: segment
+    description: Segment CDP — CloudMetrics Demo API source (Snowflake destination)
+    database: CLOUDMETRICS
+    schema: CLOUDMETRICS_DEMO_API
+    loader: segment
+    config:
+      freshness:
+        warn_after: { count: 24, period: hour }
+
+    tables:
+      - name: signed_up
+        identifier: SIGNED_UP
+        description: Signed Up track events
+        config:
+          loaded_at_field: received_at
+      - name: actor_run_completed
+        identifier: ACTOR_RUN_COMPLETED
+        config:
+          loaded_at_field: received_at
+      - name: dashboard_viewed
+        identifier: DASHBOARD_VIEWED
+        config:
+          loaded_at_field: received_at
+      - name: upgrade_clicked
+        identifier: UPGRADE_CLICKED
+        config:
+          loaded_at_field: received_at
+      - name: tracks
+        identifier: TRACKS
+        config:
+          loaded_at_field: received_at
+      - name: identifies
+        identifier: IDENTIFIES
+        config:
+          loaded_at_field: received_at
+
+  - name: raw
+    description: RAW layer — CRM and support (Keboola E+L)
+    database: CLOUDMETRICS
+    schema: RAW
+    loader: keboola
+    config:
+      freshness:
+        warn_after: { count: 24, period: hour }
+
+    tables:
+      - name: hubspot_contacts
+        identifier: HUBSPOT_CONTACTS
+        config:
+          loaded_at_field: updated_at
+      - name: intercom_conversations
+        identifier: INTERCOM_CONVERSATIONS
+        config:
+          loaded_at_field: opened_at

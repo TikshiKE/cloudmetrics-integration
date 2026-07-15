@@ -1,0 +1,17 @@
+# Copy to ~/.dbt/profiles.yml (Windows: %USERPROFILE%\.dbt\profiles.yml)
+# Never commit profiles.yml with real credentials.
+
+cloudmetrics:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: YOUR_ORG-YOUR_ACCOUNT
+      user: YOUR_USERNAME
+      password: YOUR_PASSWORD
+      role: SYSADMIN
+      database: CLOUDMETRICS
+      warehouse: DEV_WH
+      schema: STAGING
+      threads: 4
+      client_session_keep_alive: false
