@@ -25,6 +25,8 @@ models:
     columns:
       - name: user_id
         tests: [unique, not_null]
+      - name: email
+        tests: [not_null]
       - name: pqa_score
         description: Score 0-100 (enforced in model logic)
         tests: [not_null]

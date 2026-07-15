@@ -1,4 +1,4 @@
-"""Generate 04_load_csv_data.sql from data/*.csv (Keboola fallback)."""
+"""Generate scripts/snowflake/04_load_csv_data.sql from data/*.csv."""
 import csv
 from pathlib import Path
 
@@ -13,8 +13,8 @@ def esc(value: str) -> str:
 
 def main() -> None:
     lines = [
-        "-- Fallback load: HubSpot + Intercom CSV without Keboola",
-        "-- Run in Snowflake Worksheet after 02_create_raw_tables.sql",
+        "-- Load HubSpot + Intercom CSV into RAW",
+        "-- Run after 02_create_raw_tables.sql",
         "",
         "USE ROLE ACCOUNTADMIN;",
         "USE WAREHOUSE DEV_WH;",

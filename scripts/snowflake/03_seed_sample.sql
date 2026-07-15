@@ -1,4 +1,4 @@
--- Optional seed data when Segment destination is not connected yet
+-- Seed data when Segment destination is not connected
 
 USE ROLE ACCOUNTADMIN;
 USE WAREHOUSE DEV_WH;
@@ -9,7 +9,7 @@ TRUNCATE TABLE IF EXISTS SEGMENT_EVENTS;
 TRUNCATE TABLE IF EXISTS HUBSPOT_CONTACTS;
 TRUNCATE TABLE IF EXISTS INTERCOM_CONVERSATIONS;
 
--- HubSpot (subset aligned with data/hubspot_contacts.csv)
+-- HubSpot
 INSERT INTO HUBSPOT_CONTACTS (
     contact_id, email, company, plan, lifecycle_stage, company_size, updated_at
 ) VALUES
@@ -19,7 +19,7 @@ INSERT INTO HUBSPOT_CONTACTS (
     ('user_004', 'user_004@example.com', 'MetricFlow', 'enterprise', 'customer', 250, '2025-06-05T00:00:00Z'),
     ('user_005', 'user_005@example.com', 'PipeStack', 'free', 'lead', 25, '2025-06-06T00:00:00Z');
 
--- Intercom (subset aligned with data/intercom_conversations.csv)
+-- Intercom
 INSERT INTO INTERCOM_CONVERSATIONS (
     conversation_id, contact_id, opened_at, resolved_at, status
 ) VALUES
@@ -27,7 +27,7 @@ INSERT INTO INTERCOM_CONVERSATIONS (
     ('conv_0002', 'user_002', '2025-06-17T12:00:00Z', NULL, 'open'),
     ('conv_0003', 'user_003', '2025-06-18T06:00:00Z', '2025-06-19T10:00:00Z', 'closed');
 
--- Segment events (aligned with tracking plan / PQA logic)
+-- Segment events
 INSERT INTO SEGMENT_EVENTS (
     event_id, event_name, user_id, anonymous_id, timestamp, properties, context, received_at
 ) VALUES
@@ -148,10 +148,3 @@ UNION ALL
 SELECT 'HUBSPOT_CONTACTS', COUNT(*) FROM HUBSPOT_CONTACTS
 UNION ALL
 SELECT 'INTERCOM_CONVERSATIONS', COUNT(*) FROM INTERCOM_CONVERSATIONS;
-
--- Preview PQA candidate (user_002 should score high after dbt)
-SELECT event_name, COUNT(*) AS events
-FROM SEGMENT_EVENTS
-WHERE user_id = 'user_002'
-GROUP BY event_name
-ORDER BY event_name;

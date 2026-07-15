@@ -1,4 +1,4 @@
--- Проверка после 01a, 01b, 01c
+-- Verify warehouse, database, schemas
 SHOW WAREHOUSES LIKE 'DEV_WH';
 SHOW DATABASES LIKE 'CLOUDMETRICS';
 SHOW SCHEMAS IN DATABASE CLOUDMETRICS;

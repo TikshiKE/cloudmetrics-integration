@@ -3,23 +3,11 @@
 {% block content %}
 <section class="hero">
   <h1>Pipeline Monitor</h1>
-  <p class="subtitle">Observability for integration layer — Segment events &amp; reverse ETL writes</p>
+  <p class="subtitle">Segment events, reverse ETL, and BI exports</p>
 </section>
 
 <section class="card">
-  <h2>External links</h2>
-  <ul class="link-list">
-    <li><a href="https://app.segment.com" target="_blank">Segment Debugger</a></li>
-    <li><a href="https://app.snowflake.com" target="_blank">Snowflake</a></li>
-    <li><a href="https://connection.keboola.com" target="_blank">Keboola</a></li>
-    <li>dbt docs — <code>dbt docs serve</code> (local)</li>
-    <li>Tableau — dashboards (see repo docs)</li>
-  </ul>
-</section>
-
-<section class="card">
-  <h2>Segment events log <span class="badge">{{ segment_events|length }}</span></h2>
-  <p class="muted">Last 20 server-side <code>track()</code> / <code>identify()</code> calls (in-memory).</p>
+  <h2>Segment events <span class="badge">{{ segment_events|length }}</span></h2>
   {% if segment_events %}
   <div class="log-panel">
     {% for entry in segment_events %}
@@ -31,13 +19,31 @@
     {% endfor %}
   </div>
   {% else %}
-  <p class="muted">Empty — trigger actions on <a href="/">Product</a>.</p>
+  <p class="muted">No events yet.</p>
   {% endif %}
 </section>
 
 <section class="card">
-  <h2>HubSpot reverse ETL log <span class="badge">{{ hubspot_writes|length }}</span></h2>
-  <p class="muted">Writes from n8n → <code>PATCH /api/hubspot/contacts/{id}</code></p>
+  <h2>Tableau exports <span class="badge">{{ tableau_exports.ready_datasets }}/{{ tableau_exports.total_datasets }}</span></h2>
+  <p><a href="/exports/tableau/manifest.json" target="_blank">manifest.json</a></p>
+  <div class="log-panel">
+    {% for ds in tableau_exports.datasets %}
+    <div class="log-row">
+      <strong>{{ ds.dataset }}</strong>
+      {% if ds.ready %}
+      <span class="log-time">{{ ds.updated_at[:19] }}</span>
+      <code>{{ ds.row_count }} rows</code>
+      <a href="{{ ds.url }}" target="_blank">CSV</a>
+      {% else %}
+      <span class="muted">pending</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>HubSpot writes <span class="badge">{{ hubspot_writes|length }}</span></h2>
   {% if hubspot_writes %}
   <div class="log-panel">
     {% for entry in hubspot_writes %}
@@ -49,9 +55,9 @@
     {% endfor %}
   </div>
   {% else %}
-  <p class="muted">Empty until the n8n reverse ETL workflow runs.</p>
+  <p class="muted">No writes yet.</p>
   {% endif %}
 </section>
 
-<p><a href="/" class="btn">← Back to Product</a></p>
+<p><a href="/" class="btn">← Back</a></p>
 {% endblock %}

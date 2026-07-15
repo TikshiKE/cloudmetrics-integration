@@ -73,7 +73,7 @@ def dashboard(
 
 @router.get("/admin")
 def admin_page(request: Request):
-    from app.state import hubspot_writes_log, segment_events_log
+    from app.state import hubspot_writes_log, list_tableau_exports, segment_events_log
 
     return templates.TemplateResponse(
         request,
@@ -81,6 +81,7 @@ def admin_page(request: Request):
         {
             "segment_events": list(segment_events_log)[:20],
             "hubspot_writes": list(hubspot_writes_log)[:20],
+            "tableau_exports": list_tableau_exports(),
         },
     )
 
@@ -94,9 +95,7 @@ def sign_up(
     plan: str | None = Cookie(default=None),
 ):
     anon, uid, _ = _ensure_session(response, anonymous_id, user_id, plan)
-    if uid:
-        uid = uid  # already signed up
-    else:
+    if not uid:
         uid = f"user_{uuid.uuid4().hex[:8]}"
         response.set_cookie("user_id", uid, max_age=60 * 60 * 24 * 30)
 

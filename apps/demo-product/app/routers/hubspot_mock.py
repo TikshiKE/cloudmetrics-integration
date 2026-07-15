@@ -27,7 +27,6 @@ def update_contact(
     body: ContactUpdate,
     x_webhook_secret: str | None = Header(default=None),
 ) -> dict[str, Any]:
-    """Mock HubSpot endpoint for n8n reverse ETL (PQA score write-back)."""
     _verify_secret(x_webhook_secret)
     payload = body.model_dump()
     log_hubspot_write(contact_id, payload)
@@ -40,7 +39,6 @@ def update_contact(
 
 @router.get("/contacts/{contact_id}")
 def get_contact(contact_id: str) -> dict[str, str]:
-    """Read-only helper for debugging."""
     from app.state import hubspot_writes_log
 
     for entry in hubspot_writes_log:

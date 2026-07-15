@@ -1,7 +1,3 @@
--- Segment per-event tables (server-side Python source).
--- Standard cols: ID, USER_ID, TIMESTAMP, RECEIVED_AT
--- Properties are flattened; ANONYMOUS_ID often absent for server-side tracking.
-
 with signed_up as (
     select
         id as event_id,

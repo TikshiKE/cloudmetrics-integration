@@ -19,14 +19,26 @@ scored as (
         coalesce(a.dashboard_views_7d, 0) as dashboard_views_7d,
         coalesce(u.upgrade_clicked_ever, false) as upgrade_clicked_ever,
         (
-            iff(coalesce(a.actor_runs_7d, 0) >= 5, 30, 0)
-            + iff(coalesce(a.dashboard_views_7d, 0) >= 3, 20, 0)
+            iff(coalesce(a.actor_runs_7d, 0) >= 5, 30,
+                iff(coalesce(a.actor_runs_7d, 0) >= 2, 15, 0))
+            + iff(coalesce(a.dashboard_views_7d, 0) >= 3, 20,
+                iff(coalesce(a.dashboard_views_7d, 0) >= 1, 10, 0))
             + iff(coalesce(u.upgrade_clicked_ever, false), 20, 0)
-            + iff(coalesce(d.company_size, 0) >= 50, 30, 0)
-        ) as pqa_score
+            + iff(coalesce(d.company_size, 0) >= 100, 30,
+                iff(coalesce(d.company_size, 0) >= 50, 15,
+                    iff(coalesce(d.company_size, 0) >= 25, 5, 0)))
+            + case lower(coalesce(d.plan, 'free'))
+                when 'enterprise' then 15
+                when 'pro' then 10
+                when 'starter' then 5
+                else 0
+              end
+        ) as pqa_score_raw
     from {{ ref('dim_users') }} d
     left join {{ ref('int_user_activity_7d') }} a on d.user_id = a.user_id
     left join upgrade_ever u on d.user_id = u.user_id
+    where d.email is not null
+      and trim(d.email) != ''
 )
 
 select
@@ -38,10 +50,10 @@ select
     actor_runs_7d,
     dashboard_views_7d,
     upgrade_clicked_ever,
-    pqa_score,
+    least(pqa_score_raw, 100) as pqa_score,
     case
-        when pqa_score >= 70 then 'hot'
-        when pqa_score >= 40 then 'warm'
+        when least(pqa_score_raw, 100) >= 70 then 'hot'
+        when least(pqa_score_raw, 100) >= 40 then 'warm'
         else 'cold'
     end as pqa_tier,
     current_timestamp() as calculated_at

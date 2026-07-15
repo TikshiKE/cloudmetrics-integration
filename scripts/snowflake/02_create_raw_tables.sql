@@ -5,7 +5,7 @@ USE WAREHOUSE DEV_WH;
 USE DATABASE CLOUDMETRICS;
 USE SCHEMA RAW;
 
--- Segment behavioral events (CDP → Snowflake or Keboola CSV fallback)
+-- Segment events (fallback)
 CREATE OR REPLACE TABLE SEGMENT_EVENTS (
     event_id        VARCHAR(256)   NOT NULL,
     event_name      VARCHAR(256)   NOT NULL,
@@ -17,9 +17,9 @@ CREATE OR REPLACE TABLE SEGMENT_EVENTS (
     received_at     TIMESTAMP_TZ   DEFAULT CURRENT_TIMESTAMP(),
     CONSTRAINT pk_segment_events PRIMARY KEY (event_id)
 )
-COMMENT = 'Raw Segment track events — see docs/tracking-plan.md';
+COMMENT = 'Raw Segment track events';
 
--- HubSpot CRM contacts (Keboola E+L from data/hubspot_contacts.csv)
+-- HubSpot contacts
 CREATE OR REPLACE TABLE HUBSPOT_CONTACTS (
     contact_id        VARCHAR(64)    NOT NULL,
     email             VARCHAR(256)   NOT NULL,
@@ -32,7 +32,7 @@ CREATE OR REPLACE TABLE HUBSPOT_CONTACTS (
 )
 COMMENT = 'HubSpot contacts from Keboola';
 
--- Intercom support conversations (Keboola E+L from data/intercom_conversations.csv)
+-- Intercom conversations
 CREATE OR REPLACE TABLE INTERCOM_CONVERSATIONS (
     conversation_id   VARCHAR(64)    NOT NULL,
     contact_id        VARCHAR(64)    NOT NULL,
