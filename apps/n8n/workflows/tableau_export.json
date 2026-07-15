@@ -1,0 +1,282 @@
+[
+  {
+    "name": "Tableau Export Feed",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 * * * *"
+              }
+            ]
+          }
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000001",
+        "name": "Every hour :30 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [240, 300]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT PQA_TIER, COUNT(*) AS USER_COUNT FROM CLOUDMETRICS.MARTS.MART_PQA_SCORES GROUP BY 1 ORDER BY CASE PQA_TIER WHEN 'hot' THEN 1 WHEN 'warm' THEN 2 WHEN 'cold' THEN 3 ELSE 4 END"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000002",
+        "name": "Snowflake PQA Tier",
+        "type": "n8n-nodes-base.snowflake",
+        "typeVersion": 1,
+        "position": [480, 300],
+        "credentials": {
+          "snowflake": {
+            "id": "snowflake-cloudmetrics",
+            "name": "Snowflake CloudMetrics"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nif (!items.length) return [{ json: { csv: 'pqa_tier,user_count\\n' } }];\nconst keys = Object.keys(items[0].json);\nconst esc = (v) => {\n  if (v === null || v === undefined) return '';\n  const s = String(v);\n  return (s.includes(',') || s.includes('\"') || s.includes('\\n')) ? `\"${s.replace(/\"/g, '\"\"')}\"` : s;\n};\nconst lines = [keys.join(',')];\nfor (const item of items) lines.push(keys.map((k) => esc(item.json[k])).join(','));\nreturn [{ json: { csv: lines.join('\\n') } }];"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000003",
+        "name": "Rows to CSV",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [720, 300]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.DEMO_APP_URL }}/api/exports/tableau/pqa_tier",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Webhook-Secret",
+                "value": "={{ $env.HUBSPOT_MOCK_SECRET }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ csv: $json.csv }) }}"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000004",
+        "name": "POST pqa_tier",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [960, 300]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT USER_ID, EMAIL, COMPANY, PLAN, PQA_SCORE, PQA_TIER, ACTOR_RUNS_7D, DASHBOARD_VIEWS_7D, UPGRADE_CLICKED_EVER, COMPANY_SIZE, CALCULATED_AT FROM CLOUDMETRICS.MARTS.MART_PQA_SCORES ORDER BY PQA_SCORE DESC, USER_ID LIMIT 25"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000005",
+        "name": "Snowflake PQA Top",
+        "type": "n8n-nodes-base.snowflake",
+        "typeVersion": 1,
+        "position": [1200, 300],
+        "credentials": {
+          "snowflake": {
+            "id": "snowflake-cloudmetrics",
+            "name": "Snowflake CloudMetrics"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nif (!items.length) return [{ json: { csv: 'user_id,email,company,plan,pqa_score,pqa_tier,actor_runs_7d,dashboard_views_7d,upgrade_clicked_ever,company_size,calculated_at\\n' } }];\nconst keys = Object.keys(items[0].json);\nconst esc = (v) => {\n  if (v === null || v === undefined) return '';\n  const s = String(v);\n  return (s.includes(',') || s.includes('\"') || s.includes('\\n')) ? `\"${s.replace(/\"/g, '\"\"')}\"` : s;\n};\nconst lines = [keys.join(',')];\nfor (const item of items) lines.push(keys.map((k) => esc(item.json[k])).join(','));\nreturn [{ json: { csv: lines.join('\\n') } }];"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000006",
+        "name": "Rows to CSV1",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1440, 300]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.DEMO_APP_URL }}/api/exports/tableau/pqa_top",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Webhook-Secret",
+                "value": "={{ $env.HUBSPOT_MOCK_SECRET }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ csv: $json.csv }) }}"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000007",
+        "name": "POST pqa_top",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [1680, 300]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EVENT_NAME AS FUNNEL_STAGE, COUNT(DISTINCT USER_ID) AS USERS FROM CLOUDMETRICS.MARTS.FCT_PRODUCT_EVENTS WHERE EVENT_NAME IN ('Signed Up', 'Actor Run Completed', 'Upgrade Clicked') GROUP BY 1 ORDER BY CASE EVENT_NAME WHEN 'Signed Up' THEN 1 WHEN 'Actor Run Completed' THEN 2 WHEN 'Upgrade Clicked' THEN 3 ELSE 4 END"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000008",
+        "name": "Snowflake Funnel",
+        "type": "n8n-nodes-base.snowflake",
+        "typeVersion": 1,
+        "position": [1920, 300],
+        "credentials": {
+          "snowflake": {
+            "id": "snowflake-cloudmetrics",
+            "name": "Snowflake CloudMetrics"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nif (!items.length) return [{ json: { csv: 'funnel_stage,users\\n' } }];\nconst keys = Object.keys(items[0].json);\nconst esc = (v) => {\n  if (v === null || v === undefined) return '';\n  const s = String(v);\n  return (s.includes(',') || s.includes('\"') || s.includes('\\n')) ? `\"${s.replace(/\"/g, '\"\"')}\"` : s;\n};\nconst lines = [keys.join(',')];\nfor (const item of items) lines.push(keys.map((k) => esc(item.json[k])).join(','));\nreturn [{ json: { csv: lines.join('\\n') } }];"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000009",
+        "name": "Rows to CSV2",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [2160, 300]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.DEMO_APP_URL }}/api/exports/tableau/funnel",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Webhook-Secret",
+                "value": "={{ $env.HUBSPOT_MOCK_SECRET }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ csv: $json.csv }) }}"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000010",
+        "name": "POST funnel",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [2400, 300]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT 'fct_product_events' AS MART_TABLE, COUNT(*) AS ROW_COUNT, MAX(EVENT_TIMESTAMP) AS LAST_RECORD_AT, DATEDIFF('hour', MAX(EVENT_TIMESTAMP), CURRENT_TIMESTAMP()) AS HOURS_STALE FROM CLOUDMETRICS.MARTS.FCT_PRODUCT_EVENTS UNION ALL SELECT 'mart_pqa_scores', COUNT(*), MAX(CALCULATED_AT), DATEDIFF('hour', MAX(CALCULATED_AT), CURRENT_TIMESTAMP()) FROM CLOUDMETRICS.MARTS.MART_PQA_SCORES UNION ALL SELECT 'dim_users', COUNT(*), NULL, NULL FROM CLOUDMETRICS.MARTS.DIM_USERS"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000011",
+        "name": "Snowflake Health",
+        "type": "n8n-nodes-base.snowflake",
+        "typeVersion": 1,
+        "position": [2640, 300],
+        "credentials": {
+          "snowflake": {
+            "id": "snowflake-cloudmetrics",
+            "name": "Snowflake CloudMetrics"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nif (!items.length) return [{ json: { csv: 'mart_table,row_count,last_record_at,hours_stale\\n' } }];\nconst keys = Object.keys(items[0].json);\nconst esc = (v) => {\n  if (v === null || v === undefined) return '';\n  const s = String(v);\n  return (s.includes(',') || s.includes('\"') || s.includes('\\n')) ? `\"${s.replace(/\"/g, '\"\"')}\"` : s;\n};\nconst lines = [keys.join(',')];\nfor (const item of items) lines.push(keys.map((k) => esc(item.json[k])).join(','));\nreturn [{ json: { csv: lines.join('\\n') } }];"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000012",
+        "name": "Rows to CSV3",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [2880, 300]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.DEMO_APP_URL }}/api/exports/tableau/health",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Webhook-Secret",
+                "value": "={{ $env.HUBSPOT_MOCK_SECRET }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ csv: $json.csv }) }}"
+        },
+        "id": "c1a2b3c4-3333-4000-8000-000000000013",
+        "name": "POST health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [3120, 300]
+      }
+    ],
+    "connections": {
+      "Every hour :30 UTC": {
+        "main": [[{ "node": "Snowflake PQA Tier", "type": "main", "index": 0 }]]
+      },
+      "Snowflake PQA Tier": {
+        "main": [[{ "node": "Rows to CSV", "type": "main", "index": 0 }]]
+      },
+      "Rows to CSV": {
+        "main": [[{ "node": "POST pqa_tier", "type": "main", "index": 0 }]]
+      },
+      "POST pqa_tier": {
+        "main": [[{ "node": "Snowflake PQA Top", "type": "main", "index": 0 }]]
+      },
+      "Snowflake PQA Top": {
+        "main": [[{ "node": "Rows to CSV1", "type": "main", "index": 0 }]]
+      },
+      "Rows to CSV1": {
+        "main": [[{ "node": "POST pqa_top", "type": "main", "index": 0 }]]
+      },
+      "POST pqa_top": {
+        "main": [[{ "node": "Snowflake Funnel", "type": "main", "index": 0 }]]
+      },
+      "Snowflake Funnel": {
+        "main": [[{ "node": "Rows to CSV2", "type": "main", "index": 0 }]]
+      },
+      "Rows to CSV2": {
+        "main": [[{ "node": "POST funnel", "type": "main", "index": 0 }]]
+      },
+      "POST funnel": {
+        "main": [[{ "node": "Snowflake Health", "type": "main", "index": 0 }]]
+      },
+      "Snowflake Health": {
+        "main": [[{ "node": "Rows to CSV3", "type": "main", "index": 0 }]]
+      },
+      "Rows to CSV3": {
+        "main": [[{ "node": "POST health", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "active": false
+  }
+]
